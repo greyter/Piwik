@@ -1,0 +1,97 @@
+<!-- CookieFirst-->
+<script src="https://consent.cookiefirst.com/sites/beckerich.lu-74fc2cde-00b1-4efb-9501-95ab418eeaaa/consent.js"></script>
+
+<!-- Piwik -->
+<script type="text/javascript">
+(function(window, document, dataLayerName, id) {
+window[dataLayerName]=window[dataLayerName]||[],window[dataLayerName].push({start:(new Date).getTime(),event:"stg.start"});var scripts=document.getElementsByTagName('script')[0],tags=document.createElement('script');
+function stgCreateCookie(a,b,c){var d="";if(c){var e=new Date;e.setTime(e.getTime()+24*c*60*60*1e3),d="; expires="+e.toUTCString();f="; SameSite=Strict"}document.cookie=a+"="+b+d+f+"; path=/"}
+var isStgDebug=(window.location.href.match("stg_debug")||document.cookie.match("stg_debug"))&&!window.location.href.match("stg_disable_debug");stgCreateCookie("stg_debug",isStgDebug?1:"",isStgDebug?14:-1);
+var qP=[];dataLayerName!=="dataLayer"&&qP.push("data_layer_name="+dataLayerName),isStgDebug&&qP.push("stg_debug");var qPString=qP.length>0?("?"+qP.join("&")):"";
+tags.async=!0,tags.src="https://beckerich.containers.piwik.pro/"+id+".js"+qPString,scripts.parentNode.insertBefore(tags,scripts);
+!function(a,n,i){a[n]=a[n]||{};for(var c=0;c<i.length;c++)!function(i){a[n][i]=a[n][i]||{},a[n][i].api=a[n][i].api||function(){var a=[].slice.call(arguments,0);"string"==typeof a[0]&&window[dataLayerName].push({event:n+"."+i+":"+a[0],parameters:[].slice.call(arguments,1)})}}(i[c])}(window,"ppms",["tm","cm"]);
+})(window, document, 'dataLayer', 'bb55b3b6-95f2-4178-b845-1265cf56505a');
+</script>
+
+<!-- Compliance -->
+
+<script>
+ function setComplianceSettings(settings) {
+  ppms.cm.api(
+    'setComplianceSettings',
+    settings,
+    function () {
+      dataLayer.push({ 'event': 'Piwik_complianceSettingsSet' });
+    },
+    function (error) {
+      dataLayer.push({ 'event': 'Piwik_complianceSettingsError', 'errorMessage': error.message });
+    }
+  );
+}
+
+function getComplianceSettings() {
+  ppms.cm.api(
+    'getComplianceSettings',
+    function (settings) {
+      dataLayer.push({ 'event': 'Piwik_complianceSettingsUpdate', 'settings': settings });
+    },
+    function (error) {
+      dataLayer.push({ 'event': 'Piwik_complianceSettingsError', 'errorMessage': error.message });
+    }
+  );
+}
+
+function constructSettingsObject(acceptedCategories) {
+  var cfAnalytics = acceptedCategories ? acceptedCategories.performance : false;
+  var cfFunctional = acceptedCategories ? acceptedCategories.functional : false;
+  var cfAdvertising = acceptedCategories ? acceptedCategories.advertising : false;
+	
+  console.log("analytics_settings: " + cfAnalytics);
+  console.log("functional_settings: " + cfFunctional);
+  console.log("advertising_settings: " + cfAdvertising);
+
+
+  return {
+    consents : {
+      analytics: { status: cfAnalytics ? 1 : 0 },
+      ab_testing_and_personalization: { status: cfFunctional ? 1 : 0 },
+      user_feedback: { status: cfFunctional ? 1 : 0 },
+      marketing_automation: { status: cfFunctional ? 1 : 0 },
+      remarketing: { status: cfAdvertising ? 1 : 0 },
+      conversion_tracking: { status: cfAdvertising ? 1 : 0 }
+    }
+  };
+}
+
+function handleConsentUpdate(acceptedCategories) {
+  if (typeof ppms !== 'undefined' && ppms.cm && ppms.cm.api) {
+    var settings = constructSettingsObject(acceptedCategories);
+    setComplianceSettings(settings);
+    getComplianceSettings();
+  }
+}
+
+function delayedExecution() {
+  console.log("cookiefirst consent update");
+  var cookieFirst_consent = window.CookieFirst.consent;
+  var cfAnalytics = cookieFirst_consent ? cookieFirst_consent.performance : false;
+  var cfFunctional = cookieFirst_consent ? cookieFirst_consent.functional : false;
+  var cfAdvertising = cookieFirst_consent ? cookieFirst_consent.advertising : false;
+
+  
+  if (typeof ppms !== 'undefined' && ppms.cm && ppms.cm.api) {
+    var settings = constructSettingsObject(cookieFirst_consent);
+    setComplianceSettings(settings);
+    getComplianceSettings();
+  }
+}
+
+window.addEventListener("cf_consent", function (event) {
+  var acceptedCookieFirstCategories = event.detail || {};
+  handleConsentUpdate(acceptedCookieFirstCategories);
+ console.log("cookiefirst consent updated now");
+});
+
+setTimeout(delayedExecution, 2000);
+
+</script>
